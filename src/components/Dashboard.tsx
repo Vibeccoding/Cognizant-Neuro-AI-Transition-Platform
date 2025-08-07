@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { mockFramework } from '../data/mockData';
 import { Phase } from '../types';
 import PhaseCard from './PhaseCard';
@@ -15,10 +15,28 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<string | null>(null);
   const framework = mockFramework;
+  
+  // Filter to only count main transition phases
+  const mainPhases = framework.phases.filter(p => p.isMainPhase);
+  const completedPhases = mainPhases.filter(p => p.status === 'completed').length;
+  const inProgressPhases = mainPhases.filter(p => p.status === 'in-progress').length;
+  const totalPhases = mainPhases.length;
 
-  const completedPhases = framework.phases.filter(p => p.status === 'completed').length;
-  const inProgressPhases = framework.phases.filter(p => p.status === 'in-progress').length;
-  const totalPhases = framework.phases.length;
+  // Auto-load Due Diligence phase on component mount
+  useEffect(() => {
+    const dueDiligencePhase = framework.phases.find(phase => phase.id === 'due-diligence');
+    if (dueDiligencePhase && !selectedPhase && !isLoading) {
+      setIsLoading(true);
+      setLoadingPhase('due-diligence');
+      
+      // Simulate initial loading time
+      setTimeout(() => {
+        setSelectedPhase(dueDiligencePhase);
+        setIsLoading(false);
+        setLoadingPhase(null);
+      }, 1200); // Initial load time - slightly longer for better UX
+    }
+  }, []); // Empty dependency array means this runs once on mount
 
   const handlePhaseSelect = (phase: Phase) => {
     if (selectedPhase?.id === phase.id) return; // Don't reload if same phase
@@ -181,7 +199,7 @@ const Dashboard: React.FC = () => {
                       <Brain className="text-primary-500" size={24} />
                     </div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {framework.phases.reduce((sum, phase) => sum + phase.aiImplementations.length, 0)}
+                      {framework.phases.filter(phase => phase.isMainPhase).reduce((sum, phase) => sum + phase.aiImplementations.length, 0)}
                     </div>
                     <div className="text-sm text-gray-600">AI Implementations</div>
                   </div>
@@ -191,7 +209,7 @@ const Dashboard: React.FC = () => {
                       <TrendingUp className="text-green-500" size={24} />
                     </div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {Math.round(framework.phases.reduce((sum, phase) => sum + phase.progress, 0) / totalPhases)}%
+                      {Math.round(mainPhases.reduce((sum, phase) => sum + phase.progress, 0) / totalPhases)}%
                     </div>
                     <div className="text-sm text-gray-600">Average Progress</div>
                   </div>
@@ -224,7 +242,7 @@ const Dashboard: React.FC = () => {
                         <h3 className="font-semibold text-green-800">Completed Successfully</h3>
                       </div>
                       <p className="text-sm text-green-700">
-                        Due Diligence phase completed with 94% compliance score and comprehensive risk assessment.
+                        Due Diligence phase completed with {framework.phases.find((p: any) => p.id === 'due-diligence')?.keyMetrics.find((m: any) => m.label === 'Compliance Score')?.value || '94%'} compliance score and comprehensive risk assessment.
                       </p>
                     </div>
                     
@@ -234,7 +252,7 @@ const Dashboard: React.FC = () => {
                         <h3 className="font-semibold text-blue-800">AI-Powered Efficiency</h3>
                       </div>
                       <p className="text-sm text-blue-700">
-                        Knowledge Dashboard using Cognizant Neuro AI has processed 8,920 items with 92% accuracy, saving 40% processing time.
+                        Knowledge Acquisition using Cognizant Neuro AI has processed {framework.phases.find((p: any) => p.id === 'knowledge-acquisition')?.keyMetrics.find((m: any) => m.label === 'Knowledge Items')?.value || '8,920'} items with {framework.phases.find((p: any) => p.id === 'knowledge-acquisition')?.keyMetrics.find((m: any) => m.label === 'Accuracy Rate')?.value || '92%'} accuracy, saving 40% processing time.
                       </p>
                     </div>
                     
@@ -273,7 +291,15 @@ const Dashboard: React.FC = () => {
                         <h3 className="font-semibold text-primary-900">Predictive Analytics & Monitoring</h3>
                         <p className="text-sm text-primary-700">Real-time performance monitoring and predictive resource allocation</p>
                       </div>
-                      <div className="text-primary-600 font-bold">15 implementations</div>
+                      <div className="text-primary-600 font-bold">
+                        {framework.phases.filter(phase => phase.isMainPhase).reduce((count, phase) => {
+                          return count + phase.aiImplementations.filter(impl => 
+                            impl.toLowerCase().includes('predictive') || 
+                            impl.toLowerCase().includes('monitoring') ||
+                            impl.toLowerCase().includes('analytics')
+                          ).length;
+                        }, 0)} implementations
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-between p-4 bg-secondary-50 rounded-lg">
@@ -281,7 +307,16 @@ const Dashboard: React.FC = () => {
                         <h3 className="font-semibold text-secondary-900">Natural Language Processing</h3>
                         <p className="text-sm text-secondary-700">Document analysis, knowledge extraction, and automated documentation</p>
                       </div>
-                      <div className="text-secondary-600 font-bold">12 implementations</div>
+                      <div className="text-secondary-600 font-bold">
+                        {framework.phases.filter(phase => phase.isMainPhase).reduce((count, phase) => {
+                          return count + phase.aiImplementations.filter(impl => 
+                            impl.toLowerCase().includes('language') || 
+                            impl.toLowerCase().includes('document') ||
+                            impl.toLowerCase().includes('knowledge') ||
+                            impl.toLowerCase().includes('documentation')
+                          ).length;
+                        }, 0)} implementations
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
@@ -289,7 +324,16 @@ const Dashboard: React.FC = () => {
                         <h3 className="font-semibold text-green-900">Automated Testing & Validation</h3>
                         <p className="text-sm text-green-700">Intelligent testing frameworks and automated quality assurance</p>
                       </div>
-                      <div className="text-green-600 font-bold">8 implementations</div>
+                      <div className="text-green-600 font-bold">
+                        {framework.phases.filter(phase => phase.isMainPhase).reduce((count, phase) => {
+                          return count + phase.aiImplementations.filter(impl => 
+                            impl.toLowerCase().includes('testing') || 
+                            impl.toLowerCase().includes('automated') ||
+                            impl.toLowerCase().includes('validation') ||
+                            impl.toLowerCase().includes('quality')
+                          ).length;
+                        }, 0)} implementations
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -202,24 +202,24 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Total Phases</span>
-              <span className="font-semibold text-gray-900">{phases.length}</span>
+              <span className="font-semibold text-gray-900">{phases.filter(phase => phase.isMainPhase).length}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Completed</span>
               <span className="font-semibold text-green-600">
-                {phases.filter(p => p.status === 'completed').length}
+                {phases.filter(p => p.isMainPhase && p.status === 'completed').length}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">In Progress</span>
               <span className="font-semibold text-blue-600">
-                {phases.filter(p => p.status === 'in-progress').length}
+                {phases.filter(p => p.isMainPhase && p.status === 'in-progress').length}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">AI Implementations</span>
               <span className="font-semibold text-primary-600">
-                {phases.reduce((sum, phase) => sum + phase.aiImplementations.length, 0)}
+                {phases.filter(phase => phase.isMainPhase).reduce((sum, phase) => sum + phase.aiImplementations.length, 0)}
               </span>
             </div>
           </div>

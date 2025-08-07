@@ -12,6 +12,7 @@ export interface Phase {
     value: string | number;
     change?: string;
   }[];
+  isMainPhase?: boolean; // Distinguish between main transition phases and sub-modules
 }
 
 export interface ChatMessage {

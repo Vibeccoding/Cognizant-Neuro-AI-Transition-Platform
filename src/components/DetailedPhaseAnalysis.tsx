@@ -20,7 +20,8 @@ import {
   ChevronRight,
   FileText,
   Send,
-  User
+  User,
+  Download
 } from 'lucide-react';
 import AgenticChat from './AgenticChat';
 import AgenticAIRiskAnalysis from './AgenticAIRiskAnalysis';
@@ -38,8 +39,10 @@ interface DetailedPhaseAnalysisProps {
 }
 
 const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'ai' | 'risks' | 'timeline' | 'agentic-ai-risks' | 'mitigation-plan' | 'knowledge-ai-assist'>(
-    phase.id === 'due-diligence' ? 'agentic-ai-risks' : phase.id === 'knowledge-acquisition' ? 'knowledge-ai-assist' : 'overview'
+  const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'ai' | 'risks' | 'timeline' | 'agentic-ai-risks' | 'mitigation-plan' | 'knowledge-ai-assist' | 'kt-ai-assistant'>(
+    phase.id === 'knowledge-acquisition' ? 'knowledge-ai-assist' : 
+    phase.id === 'shadow-reverse' ? 'kt-ai-assistant' : 
+    phase.id === 'due-diligence' ? 'agentic-ai-risks' : 'overview'
   );
 
   // Chat state management
@@ -64,12 +67,12 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
     scrollToBottom();
   }, [chatMessages]);
 
-  // Simulate AI response
+  // Simulate AI response for Knowledge Acquisition
   const generateAIResponse = (userMessage: string): string => {
     const responses = {
-      'recent extractions': "Here are the recent extractions: 1,240 knowledge items processed this week with 94% accuracy. Key domains include system architecture (35%), business processes (28%), and technical documentation (37%).",
+      'recent extractions': `Here are the recent extractions: ${Math.floor(parseInt(phase.keyMetrics[0]?.value?.toString().replace(/[^0-9]/g, '') || '1240') / 7)} knowledge items processed this week with ${phase.keyMetrics[1]?.value || '94%'} accuracy. Key domains include system architecture (35%), business processes (28%), and technical documentation (37%).`,
       'workflow process': "Our workflow process includes: 1) Document ingestion → 2) AI-powered analysis → 3) Knowledge extraction → 4) Quality validation → 5) Knowledge base integration. Average processing time is 1.2 hours per document.",
-      'knowledge base summary': "Knowledge Base Summary: 8,920 total items, 92% accuracy rate, covering 15 business domains. Top categories: Technical docs (40%), Process guides (30%), Policy documents (20%), Training materials (10%).",
+      'knowledge base summary': `Knowledge Base Summary: ${phase.keyMetrics[0]?.value || '8,920'} total items, ${phase.keyMetrics[1]?.value || '92%'} accuracy rate, covering 15 business domains. Top categories: Technical docs (40%), Process guides (30%), Policy documents (20%), Training materials (10%).`,
       'help': "I can assist with: Knowledge extraction status, Document analysis results, Process documentation, Technical queries, System architecture insights, and Business process explanations.",
     };
 
@@ -137,6 +140,53 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: generateAIResponse(question),
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      
+      setChatMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1000 + Math.random() * 2000);
+  };
+
+  // Handle quick message buttons for KT AI Assistant
+  const handleQuickMessage = (message: string) => {
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: message,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setCurrentMessage('');
+    setIsTyping(true);
+
+    // Generate specialized KT responses using dynamic phase data
+    const generateKTResponse = (question: string) => {
+      const lowerQuestion = question.toLowerCase();
+      // Get current phase metrics for Shadow & Reverse Shadow
+      const shadowPhase = phase.id === 'shadow-reverse' ? phase : null;
+      
+      if (lowerQuestion.includes('completion status') || lowerQuestion.includes('kt status')) {
+        const testCoverage = shadowPhase?.keyMetrics.find(m => m.label === 'Test Coverage')?.value || '0%';
+        return `Current KT completion is at 87% with 156 knowledge items documented. System Administration (95%) and API Documentation (92%) are nearly complete. Business Processes (78%) and Troubleshooting Guides (67%) need additional focus. Test coverage is currently at ${testCoverage}.`;
+      } else if (lowerQuestion.includes('gaps') || lowerQuestion.includes('identify')) {
+        return "I've identified 4 critical knowledge gaps: 1) Legacy system documentation incomplete (High risk), 2) Complex business rules undocumented (High risk), 3) Key personnel not fully engaged (Medium risk), 4) Testing procedures need clarification (Low risk). Recommend immediate focus on items 1 and 3.";
+      } else if (lowerQuestion.includes('critical areas')) {
+        return "Critical knowledge areas requiring immediate attention: Database Management (89% complete), Business Processes (78% complete), and Troubleshooting Guides (67% complete). These areas have high business impact and should be prioritized in shadow operations.";
+      } else if (lowerQuestion.includes('progress report')) {
+        const progressValue = shadowPhase?.progress || 0;
+        return `KT Progress Summary: Overall 87% complete with 94% accuracy. 12 active shadow sessions running. Phase progress: ${progressValue}%. Top performers: System Admin (95%), API Docs (92%). Areas needing focus: Troubleshooting (67%), Business Processes (78%). Estimated completion: 2 weeks at current pace.`;
+      }
+      return generateAIResponse(question);
+    };
+
+    // Simulate AI thinking time
+    setTimeout(() => {
+      const aiResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: generateKTResponse(message),
         sender: 'ai',
         timestamp: new Date()
       };
@@ -233,6 +283,104 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
   const riskAssessment = generateRiskAssessment(phase);
   const timelineEvents = generateTimelineEvents(phase);
 
+  // Download Knowledge Acquisition Mitigation Plan
+  const downloadKnowledgeMitigationPlan = () => {
+    const mitigationPlanData = {
+      title: 'Knowledge Acquisition Mitigation Plan',
+      generatedDate: new Date().toISOString(),
+      phase: phase.name,
+      phaseId: phase.id,
+      progress: `${phase.progress}%`,
+      status: phase.status,
+      mitigations: [
+        {
+          id: 'KA-MIT-001',
+          riskTitle: 'Knowledge Transfer Bottlenecks',
+          priority: 'High',
+          strategy: 'Implement AI-powered knowledge extraction and automated documentation',
+          actions: [
+            'Deploy AI knowledge extraction tools',
+            'Create automated documentation generation system',
+            'Establish parallel knowledge capture streams',
+            'Implement real-time knowledge validation'
+          ],
+          timeline: '4-6 weeks',
+          owner: 'Knowledge Management Team',
+          estimatedCost: '$75,000',
+          expectedOutcome: '90% reduction in knowledge transfer bottlenecks'
+        },
+        {
+          id: 'KA-MIT-002', 
+          riskTitle: 'Documentation Quality Gaps',
+          priority: 'Medium',
+          strategy: 'Deploy intelligent document review and validation systems',
+          actions: [
+            'Implement AI-powered document quality assessment',
+            'Create automated review workflows',
+            'Establish quality metrics and monitoring',
+            'Deploy real-time feedback systems'
+          ],
+          timeline: '3-4 weeks',
+          owner: 'Technical Documentation Team',
+          estimatedCost: '$45,000',
+          expectedOutcome: '95% improvement in documentation quality scores'
+        },
+        {
+          id: 'KA-MIT-003',
+          riskTitle: 'Expert Knowledge Dependencies',
+          priority: 'Critical',
+          strategy: 'Accelerated knowledge capture with AI-assisted interviews',
+          actions: [
+            'Deploy AI-powered interview analysis',
+            'Create knowledge dependency mapping',
+            'Implement expert knowledge capture automation',
+            'Establish knowledge redundancy systems'
+          ],
+          timeline: '2-3 weeks',
+          owner: 'Subject Matter Expert Team',
+          estimatedCost: '$60,000',
+          expectedOutcome: '85% reduction in critical knowledge dependencies'
+        }
+      ],
+      recommendations: [
+        'Prioritize critical knowledge areas first',
+        'Implement parallel documentation streams',
+        'Establish continuous validation processes',
+        'Deploy AI-powered knowledge extraction tools',
+        'Create knowledge dependency maps',
+        'Implement automated quality checks'
+      ],
+      riskMetrics: {
+        totalRisks: 3,
+        criticalRisks: 1,
+        highRisks: 1,
+        mediumRisks: 1,
+        lowRisks: 0
+      },
+      totalEstimatedCost: '$180,000',
+      estimatedTimeToComplete: '6 weeks',
+      expectedROI: '250%',
+      successMetrics: [
+        'Knowledge transfer efficiency: +90%',
+        'Documentation quality score: +95%',
+        'Expert dependency reduction: -85%',
+        'Process automation rate: +70%'
+      ]
+    };
+
+    // Create and download the file
+    const dataStr = JSON.stringify(mitigationPlanData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `knowledge-acquisition-mitigation-plan-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Define tabs with special structure for Due Diligence
   const baseTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -251,9 +399,24 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
       ]
     : phase.id === 'knowledge-acquisition'
     ? [
-        { id: 'overview', label: 'Overview', icon: BarChart3 },
         { id: 'knowledge-ai-assist', label: 'Transition Risk Agentic AI', icon: Brain },
         { id: 'metrics', label: 'Detailed Metrics', icon: PieChart },
+        { id: 'risks', label: 'Risk Assessment', icon: Shield },
+        { id: 'timeline', label: 'Timeline', icon: Calendar }
+      ]
+    : phase.id === 'shadow-reverse'
+    ? [
+        { id: 'overview', label: 'Overview', icon: BarChart3 },
+        { id: 'kt-ai-assistant', label: 'KT AI Assistant', icon: Brain },
+        { id: 'metrics', label: 'Detailed Metrics', icon: PieChart },
+        { id: 'risks', label: 'Risk Assessment', icon: Shield },
+        { id: 'timeline', label: 'Timeline', icon: Calendar }
+      ]
+    : phase.id === 'dashboard'
+    ? [
+        { id: 'overview', label: 'Overview', icon: BarChart3 },
+        { id: 'metrics', label: 'Detailed Metrics', icon: PieChart },
+        { id: 'ai', label: 'Agentic AI Analysis', icon: Brain },
         { id: 'risks', label: 'Risk Assessment', icon: Shield },
         { id: 'timeline', label: 'Timeline', icon: Calendar }
       ]
@@ -469,13 +632,206 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
 
         {activeTab === 'knowledge-ai-assist' && phase.id === 'knowledge-acquisition' && (
           <div className="space-y-6">
-            {/* Knowledge Dashboard Header */}
+            {/* Knowledge Acquisition Header */}
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
               <div className="flex items-center mb-4">
                 <Brain className="text-purple-600 mr-3" size={28} />
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Knowledge Dashboard</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Knowledge Acquisition</h2>
                   <p className="text-gray-600">AI-powered knowledge extraction, documentation, and intelligent assistance</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Knowledge AI Chat Interface - Moved to Top */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full mr-3">
+                  <Brain className="text-purple-600" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Transition Risk AI Chat Assistant</h3>
+                  <p className="text-sm text-gray-600">Ask questions about your knowledge base, processes, and documentation</p>
+                </div>
+              </div>
+              
+              {/* Chat Messages Area */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-4 min-h-[300px] max-h-[400px] overflow-y-auto">
+                <div className="space-y-4">
+                  {chatMessages.map((message) => (
+                    <div key={message.id} className={`flex items-start space-x-3 ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                        message.sender === 'ai' 
+                          ? 'bg-purple-100' 
+                          : 'bg-blue-100'
+                      }`}>
+                        {message.sender === 'ai' ? (
+                          <Brain className="text-purple-600" size={16} />
+                        ) : (
+                          <User className="text-blue-600" size={16} />
+                        )}
+                      </div>
+                      <div className={`rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md ${
+                        message.sender === 'ai' 
+                          ? 'bg-white' 
+                          : 'bg-blue-600 text-white'
+                      }`}>
+                        <p className={`text-sm ${message.sender === 'ai' ? 'text-gray-700' : 'text-white'}`}>
+                          {message.text}
+                        </p>
+                        <p className={`text-xs mt-2 ${message.sender === 'ai' ? 'text-gray-500' : 'text-blue-200'}`}>
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <Brain className="text-purple-600" size={16} />
+                      </div>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Chat Input */}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Ask me about your transition process, risks, or documentation..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg transition-colors"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Knowledge Acquisition Mitigation Plan Section */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <Shield className="text-red-600 mr-3" size={24} />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Knowledge Acquisition Mitigation Plan</h3>
+                    <p className="text-sm text-gray-600">Comprehensive risk mitigation strategies for knowledge transfer and documentation</p>
+                  </div>
+                </div>
+                <button
+                  onClick={downloadKnowledgeMitigationPlan}
+                  className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  <Download size={16} />
+                  <span>Download Plan</span>
+                </button>
+              </div>
+
+              {/* Mitigation Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center mb-2">
+                    <AlertTriangle className="text-red-600 mr-2" size={16} />
+                    <span className="text-sm font-medium text-red-800">Critical Risks</span>
+                  </div>
+                  <div className="text-2xl font-bold text-red-900">1</div>
+                  <div className="text-xs text-red-700">Expert Knowledge Dependencies</div>
+                </div>
+                
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-center mb-2">
+                    <Clock className="text-orange-600 mr-2" size={16} />
+                    <span className="text-sm font-medium text-orange-800">High Priority</span>
+                  </div>
+                  <div className="text-2xl font-bold text-orange-900">1</div>
+                  <div className="text-xs text-orange-700">Knowledge Transfer Bottlenecks</div>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center mb-2">
+                    <DollarSign className="text-blue-600 mr-2" size={16} />
+                    <span className="text-sm font-medium text-blue-800">Investment</span>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-900">$180K</div>
+                  <div className="text-xs text-blue-700">Total Mitigation Cost</div>
+                </div>
+              </div>
+
+              {/* Key Mitigation Strategies */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Key Mitigation Strategies</h4>
+                
+                <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center">
+                      <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full mr-3">CRITICAL</span>
+                      <h5 className="font-medium text-red-900">Expert Knowledge Dependencies</h5>
+                    </div>
+                    <span className="text-xs text-red-600">2-3 weeks</span>
+                  </div>
+                  <p className="text-sm text-red-700 mb-2">Accelerated knowledge capture with AI-assisted interviews</p>
+                  <div className="text-xs text-red-600">Owner: Subject Matter Expert Team • Cost: $60,000</div>
+                </div>
+
+                <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center">
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full mr-3">HIGH</span>
+                      <h5 className="font-medium text-orange-900">Knowledge Transfer Bottlenecks</h5>
+                    </div>
+                    <span className="text-xs text-orange-600">4-6 weeks</span>
+                  </div>
+                  <p className="text-sm text-orange-700 mb-2">Implement AI-powered knowledge extraction and automated documentation</p>
+                  <div className="text-xs text-orange-600">Owner: Knowledge Management Team • Cost: $75,000</div>
+                </div>
+
+                <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center">
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full mr-3">MEDIUM</span>
+                      <h5 className="font-medium text-yellow-900">Documentation Quality Gaps</h5>
+                    </div>
+                    <span className="text-xs text-yellow-600">3-4 weeks</span>
+                  </div>
+                  <p className="text-sm text-yellow-700 mb-2">Deploy intelligent document review and validation systems</p>
+                  <div className="text-xs text-yellow-600">Owner: Technical Documentation Team • Cost: $45,000</div>
+                </div>
+              </div>
+
+              {/* Success Metrics */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h4 className="font-semibold text-gray-900 mb-3">Expected Outcomes</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-green-600">+90%</div>
+                    <div className="text-xs text-gray-600">Transfer Efficiency</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-blue-600">+95%</div>
+                    <div className="text-xs text-gray-600">Quality Score</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-purple-600">-85%</div>
+                    <div className="text-xs text-gray-600">Dependencies</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-orange-600">250%</div>
+                    <div className="text-xs text-gray-600">Expected ROI</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -554,22 +910,24 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Knowledge Extraction Progress</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">8,920</div>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">{phase.keyMetrics[0]?.value || '8,920'}</div>
                   <div className="text-sm text-gray-600">Knowledge Items</div>
-                  <div className="text-xs text-green-600 mt-1">+120% this month</div>
+                  <div className="text-xs text-green-600 mt-1">{phase.keyMetrics[0]?.change || '+120% this month'}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">92%</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-2">{phase.keyMetrics[1]?.value || '92%'}</div>
                   <div className="text-sm text-gray-600">Accuracy Rate</div>
-                  <div className="text-xs text-green-600 mt-1">+5% improvement</div>
+                  <div className="text-xs text-green-600 mt-1">{phase.keyMetrics[1]?.change || '+5% improvement'}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">1.2h</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">{phase.keyMetrics[2]?.value || '1.2h'}</div>
                   <div className="text-sm text-gray-600">Avg Processing Time</div>
-                  <div className="text-xs text-green-600 mt-1">-40% faster</div>
+                  <div className="text-xs text-green-600 mt-1">{phase.keyMetrics[2]?.change || '-40% faster'}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600 mb-2">2,340</div>
+                  <div className="text-3xl font-bold text-orange-600 mb-2">
+                    {phase.keyMetrics.find(m => m.label === 'Documents Analyzed')?.value || '2,340'}
+                  </div>
                   <div className="text-sm text-gray-600">AI Queries Answered</div>
                   <div className="text-xs text-green-600 mt-1">+85% engagement</div>
                 </div>
@@ -606,16 +964,55 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
                 </button>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Knowledge AI Chat Interface */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center mb-6">
-                <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full mr-3">
-                  <Brain className="text-purple-600" size={20} />
-                </div>
+        {activeTab === 'kt-ai-assistant' && phase.id === 'shadow-reverse' && (
+          <div className="space-y-6">
+            {/* KT AI Assistant Header */}
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border border-indigo-200">
+              <div className="flex items-center mb-4">
+                <Brain className="text-indigo-600 mr-3" size={28} />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Transition Risk AI Chat Assistant</h3>
-                  <p className="text-sm text-gray-600">Ask questions about your knowledge base, processes, and documentation</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Knowledge Transfer AI Assistant</h2>
+                  <p className="text-gray-600">AI-powered tracking and management of knowledge transfer during shadow operations</p>
+                </div>
+              </div>
+            </div>
+
+            {/* KT Metrics Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">{phase.progress || 87}%</div>
+                <div className="text-sm text-gray-600">KT Completion</div>
+                <div className="text-xs text-green-600 mt-1">↑ 15% this week</div>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-2">
+                  {phase.keyMetrics.find(m => m.label === 'Test Coverage')?.value?.toString().replace('%', '') || '156'}
+                </div>
+                <div className="text-sm text-gray-600">Knowledge Items</div>
+                <div className="text-xs text-blue-600 mt-1">↑ 23 new items</div>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                <div className="text-3xl font-bold text-orange-600 mb-2">12</div>
+                <div className="text-sm text-gray-600">Active Sessions</div>
+                <div className="text-xs text-gray-600 mt-1">Live tracking</div>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                <div className="text-3xl font-bold text-green-600 mb-2">94%</div>
+                <div className="text-sm text-gray-600">Accuracy Score</div>
+                <div className="text-xs text-green-600 mt-1">↑ 2% improved</div>
+              </div>
+            </div>
+
+            {/* KT AI Chat Interface */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center mb-4">
+                <Brain className="text-indigo-600 mr-3" size={24} />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">KT AI Chat Assistant</h3>
+                  <p className="text-sm text-gray-600">Ask questions about knowledge transfer progress, identify gaps, and get real-time insights</p>
                 </div>
               </div>
               
@@ -626,36 +1023,35 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
                     <div key={message.id} className={`flex items-start space-x-3 ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                         message.sender === 'ai' 
-                          ? 'bg-purple-100' 
+                          ? 'bg-indigo-100' 
                           : 'bg-blue-100'
                       }`}>
                         {message.sender === 'ai' ? (
-                          <Brain className="text-purple-600" size={16} />
+                          <Brain className="text-indigo-600" size={16} />
                         ) : (
-                          <User className="text-blue-600" size={16} />
+                          <span className="text-blue-600 text-sm font-medium">U</span>
                         )}
                       </div>
-                      <div className={`rounded-lg p-3 shadow-sm max-w-xs lg:max-w-md ${
-                        message.sender === 'ai' 
-                          ? 'bg-white' 
+                      <div className={`flex-1 p-3 rounded-lg ${
+                        message.sender === 'ai'
+                          ? 'bg-white border border-gray-200'
                           : 'bg-blue-600 text-white'
                       }`}>
-                        <p className={`text-sm ${message.sender === 'ai' ? 'text-gray-700' : 'text-white'}`}>
-                          {message.text}
-                        </p>
-                        <p className={`text-xs mt-2 ${message.sender === 'ai' ? 'text-gray-500' : 'text-blue-200'}`}>
+                        <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                        <span className={`text-xs mt-1 block ${
+                          message.sender === 'ai' ? 'text-gray-500' : 'text-blue-100'
+                        }`}>
                           {message.timestamp.toLocaleTimeString()}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   ))}
-                  
                   {isTyping && (
                     <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Brain className="text-purple-600" size={16} />
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100">
+                        <Brain className="text-indigo-600" size={16} />
                       </div>
-                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <div className="flex-1 p-3 rounded-lg bg-white border border-gray-200">
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -664,71 +1060,134 @@ const DetailedPhaseAnalysis: React.FC<DetailedPhaseAnalysisProps> = ({ phase }) 
                       </div>
                     </div>
                   )}
-                  
                   <div ref={chatEndRef} />
                 </div>
-                
-                {/* Suggested Questions - only show when no conversation started */}
-                {chatMessages.length === 1 && (
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <button 
-                      onClick={() => handleSuggestedQuestion('Show me recent extractions')}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs hover:bg-purple-200 transition-colors"
-                    >
-                      Show me recent extractions
-                    </button>
-                    <button 
-                      onClick={() => handleSuggestedQuestion('Explain workflow process')}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition-colors"
-                    >
-                      Explain workflow process
-                    </button>
-                    <button 
-                      onClick={() => handleSuggestedQuestion('Knowledge base summary')}
-                      className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs hover:bg-green-200 transition-colors"
-                    >
-                      Knowledge base summary
-                    </button>
-                  </div>
-                )}
               </div>
-              
+
               {/* Chat Input */}
               <div className="flex space-x-3">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={currentMessage}
-                    onChange={(e) => setCurrentMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask about your knowledge base, processes, or documentation..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                    disabled={isTyping}
-                  />
-                </div>
-                <button 
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Ask about KT progress, gaps, or specific knowledge areas..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <button
                   onClick={handleSendMessage}
                   disabled={!currentMessage.trim() || isTyping}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <span>Send</span>
-                  <Send className="w-4 h-4" />
+                  Send
                 </button>
               </div>
-              
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
-                <div className="text-center">
-                  <div className="text-sm font-semibold text-purple-600">2,340</div>
-                  <div className="text-xs text-gray-500">Questions Answered</div>
+
+              {/* Quick Action Buttons */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button 
+                  onClick={() => handleQuickMessage("What's the current KT completion status?")}
+                  className="px-3 py-1 text-sm bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors"
+                >
+                  KT Status
+                </button>
+                <button 
+                  onClick={() => handleQuickMessage("Identify any knowledge gaps")}
+                  className="px-3 py-1 text-sm bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors"
+                >
+                  Find Gaps
+                </button>
+                <button 
+                  onClick={() => handleQuickMessage("Show critical knowledge areas")}
+                  className="px-3 py-1 text-sm bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors"
+                >
+                  Critical Areas
+                </button>
+                <button 
+                  onClick={() => handleQuickMessage("Generate KT progress report")}
+                  className="px-3 py-1 text-sm bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors"
+                >
+                  Progress Report
+                </button>
+              </div>
+            </div>
+
+            {/* KT Progress Tracking */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <CheckCircle className="text-green-600 mr-2" size={20} />
+                  Knowledge Transfer Progress
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { area: 'System Administration', progress: 95, status: 'Completed' },
+                    { area: 'Database Management', progress: 89, status: 'In Progress' },
+                    { area: 'Business Processes', progress: 78, status: 'In Progress' },
+                    { area: 'API Documentation', progress: 92, status: 'Completed' },
+                    { area: 'Troubleshooting Guides', progress: 67, status: 'In Progress' }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-700">{item.area}</span>
+                          <span className="text-sm text-gray-500">{item.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${item.progress >= 90 ? 'bg-green-500' : item.progress >= 70 ? 'bg-blue-500' : 'bg-yellow-500'}`}
+                            style={{ width: `${item.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <span className={`ml-3 px-2 py-1 text-xs rounded-full ${
+                        item.status === 'Completed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-center">
-                  <div className="text-sm font-semibold text-blue-600">95%</div>
-                  <div className="text-xs text-gray-500">Accuracy Rate</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-semibold text-green-600">1.2s</div>
-                  <div className="text-xs text-gray-500">Avg Response Time</div>
+              </div>
+
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <AlertTriangle className="text-yellow-600 mr-2" size={20} />
+                  Knowledge Gaps & Risks
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { risk: 'Legacy system documentation incomplete', severity: 'High', impact: 'Medium' },
+                    { risk: 'Key personnel not fully engaged', severity: 'Medium', impact: 'High' },
+                    { risk: 'Complex business rules undocumented', severity: 'High', impact: 'High' },
+                    { risk: 'Testing procedures need clarification', severity: 'Low', impact: 'Medium' }
+                  ].map((risk, index) => (
+                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{risk.risk}</p>
+                          <div className="mt-1 flex space-x-3">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              risk.severity === 'High' ? 'bg-red-100 text-red-800' :
+                              risk.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {risk.severity} Risk
+                            </span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              risk.impact === 'High' ? 'bg-red-100 text-red-800' :
+                              risk.impact === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {risk.impact} Impact
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

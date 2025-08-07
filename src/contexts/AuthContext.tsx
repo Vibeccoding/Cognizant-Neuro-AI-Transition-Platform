@@ -68,10 +68,9 @@ const mockUsers: User[] = [
   {
     id: '1',
     email: 'admin@cognizant.com',
-    name: 'Dr. Sarah Chen',
+    name: 'admin',
     role: 'admin',
     department: 'AI Strategy',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b671746c?w=150&h=150&fit=crop&crop=face',
   },
   {
     id: '2',
@@ -79,7 +78,6 @@ const mockUsers: User[] = [
     name: 'Michael Rodriguez',
     role: 'manager',
     department: 'Digital Transformation',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
   },
   {
     id: '3',
@@ -87,7 +85,6 @@ const mockUsers: User[] = [
     name: 'Emma Johnson',
     role: 'analyst',
     department: 'Data Analytics',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
   },
   {
     id: '4',
@@ -95,7 +92,6 @@ const mockUsers: User[] = [
     name: 'David Kim',
     role: 'viewer',
     department: 'Business Intelligence',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
   },
 ];
 

@@ -20,7 +20,7 @@ A comprehensive React web application for managing AI transition frameworks with
 ### 📊 Transition Phases
 1. **AI Transition Dashboard** - Cognizant Neuro AI-powered dashboard and monitoring
 2. **Due Diligence** - Comprehensive risk assessment with specialized AI-powered risk analysis, mitigation planning, and timeline management
-3. **Knowledge Dashboard** - Cognizant Neuro AI-driven knowledge extraction with specialized AI assistant capabilities
+3. **Knowledge Acquisition** - Cognizant Neuro AI-driven knowledge extraction with specialized AI assistant capabilities
 4. **Shadow & Reverse Shadow** - Parallel operations monitoring
 5. **Stabilization** - System optimization and stabilization
 6. **Steady Support** - Ongoing Cognizant Neuro AI-driven support
@@ -60,8 +60,8 @@ The **Due Diligence** phase includes specialized functionality:
 - **Milestone Tracking**: Key deliverables and checkpoint monitoring
 - **Progress Visualization**: Visual representation of phase progress and completion status
 
-### 🧠 Knowledge Dashboard Features
-The **Knowledge Dashboard** phase includes specialized **Knowledge Dashboard** functionality:
+### 🧠 Knowledge Acquisition Features
+The **Knowledge Acquisition** phase includes specialized **Knowledge Acquisition** functionality:
 
 #### **Knowledge AI Assist Tab**
 - **Smart Documentation**: Automated extraction and organization of knowledge from legacy systems

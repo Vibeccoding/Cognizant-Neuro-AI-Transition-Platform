@@ -9,6 +9,7 @@ export const mockPhases: Phase[] = [
     progress: 75,
     startDate: '2024-01-15',
     endDate: '2024-03-15',
+    isMainPhase: false, // Sub-module
     aiImplementations: [
       'Predictive analytics for resource allocation',
       'Automated alert systems',
@@ -29,6 +30,7 @@ export const mockPhases: Phase[] = [
     progress: 100,
     startDate: '2024-02-01',
     endDate: '2024-02-28',
+    isMainPhase: true, // Main transition phase
     aiImplementations: [
       'Automated document analysis',
       'Risk assessment algorithms',
@@ -43,12 +45,13 @@ export const mockPhases: Phase[] = [
   },
   {
     id: 'knowledge-acquisition',
-    name: 'Knowledge Dashboard',
+    name: 'Knowledge Acquisition',
     description: 'AI-driven knowledge extraction and documentation from incumbent systems',
     status: 'in-progress',
     progress: 60,
     startDate: '2024-03-01',
     endDate: '2024-04-30',
+    isMainPhase: true, // Main transition phase
     aiImplementations: [
       'Natural language processing for documentation',
       'Knowledge graph generation',
@@ -69,6 +72,7 @@ export const mockPhases: Phase[] = [
     progress: 0,
     startDate: '2024-05-01',
     endDate: '2024-07-15',
+    isMainPhase: true, // Main transition phase
     aiImplementations: [
       'Performance comparison algorithms',
       'Automated testing frameworks',
@@ -89,6 +93,7 @@ export const mockPhases: Phase[] = [
     progress: 0,
     startDate: '2024-07-16',
     endDate: '2024-09-30',
+    isMainPhase: true, // Main transition phase
     aiImplementations: [
       'Self-healing systems',
       'Performance optimization algorithms',
@@ -109,6 +114,7 @@ export const mockPhases: Phase[] = [
     progress: 0,
     startDate: '2024-10-01',
     endDate: '2025-03-31',
+    isMainPhase: true, // Main transition phase
     aiImplementations: [
       'Intelligent ticketing systems',
       'Automated resolution engines',
@@ -129,6 +135,7 @@ export const mockPhases: Phase[] = [
     progress: 45,
     startDate: '2024-01-01',
     endDate: '2024-12-31',
+    isMainPhase: false, // Sub-module
     aiImplementations: [
       'Automated report generation',
       'Predictive analytics dashboards',
@@ -149,6 +156,7 @@ export const mockPhases: Phase[] = [
     progress: 80,
     startDate: '2024-02-15',
     endDate: '2024-11-30',
+    isMainPhase: false, // Sub-module
     aiImplementations: [
       'Sentiment analysis algorithms',
       'Automated survey generation',
@@ -169,6 +177,7 @@ export const mockPhases: Phase[] = [
     progress: 90,
     startDate: '2024-01-20',
     endDate: '2024-06-30',
+    isMainPhase: false, // Sub-module
     aiImplementations: [
       'Intelligent API routing',
       'Automated testing suites',
@@ -189,6 +198,7 @@ export const mockPhases: Phase[] = [
     progress: 55,
     startDate: '2024-03-15',
     endDate: '2024-08-15',
+    isMainPhase: false, // Sub-module
     aiImplementations: [
       'Data quality assessment algorithms',
       'Automated data cleansing',
@@ -208,7 +218,7 @@ export const mockFramework: TransitionFramework = {
   name: 'Cognizant Neuro AI Transition Platform 2024',
   description: 'Comprehensive AI-driven transition from incumbent vendor to new systems powered by Cognizant Neuro',
   phases: mockPhases,
-  overallProgress: 65,
+  overallProgress: 32, // Updated to reflect only main phases: (100+60+0+0+0)/5 = 32%
   startDate: '2024-01-01',
   estimatedEndDate: '2025-03-31'
 };

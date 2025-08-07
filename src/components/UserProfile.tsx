@@ -9,7 +9,9 @@ import {
   UserCircle, 
   Shield,
   Activity,
-  HelpCircle
+  HelpCircle,
+  Download,
+  FileText
 } from 'lucide-react';
 
 const UserProfile: React.FC = () => {
@@ -37,6 +39,68 @@ const UserProfile: React.FC = () => {
 
   const openLogoutModal = () => {
     setShowLogoutModal(true);
+    setIsOpen(false);
+  };
+
+  const downloadMitigationPlan = () => {
+    // Create mitigation plan data
+    const mitigationPlanData = {
+      title: 'Knowledge Acquisition Mitigation Plan',
+      generatedDate: new Date().toISOString(),
+      phase: 'Knowledge Acquisition',
+      generatedBy: user?.name || 'Unknown User',
+      mitigations: [
+        {
+          id: 'KA-MIT-001',
+          riskTitle: 'Knowledge Transfer Bottlenecks',
+          priority: 'High',
+          strategy: 'Implement AI-powered knowledge extraction and automated documentation',
+          timeline: '4-6 weeks',
+          owner: 'Knowledge Management Team',
+          estimatedCost: '$75,000'
+        },
+        {
+          id: 'KA-MIT-002', 
+          riskTitle: 'Documentation Quality Gaps',
+          priority: 'Medium',
+          strategy: 'Deploy intelligent document review and validation systems',
+          timeline: '3-4 weeks',
+          owner: 'Technical Documentation Team',
+          estimatedCost: '$45,000'
+        },
+        {
+          id: 'KA-MIT-003',
+          riskTitle: 'Expert Knowledge Dependencies',
+          priority: 'Critical',
+          strategy: 'Accelerated knowledge capture with AI-assisted interviews',
+          timeline: '2-3 weeks',
+          owner: 'Subject Matter Expert Team',
+          estimatedCost: '$60,000'
+        }
+      ],
+      recommendations: [
+        'Prioritize critical knowledge areas first',
+        'Implement parallel documentation streams',
+        'Establish continuous validation processes',
+        'Deploy AI-powered knowledge extraction tools'
+      ],
+      totalEstimatedCost: '$180,000',
+      estimatedTimeToComplete: '6 weeks'
+    };
+
+    // Create and download the file
+    const dataStr = JSON.stringify(mitigationPlanData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `knowledge-acquisition-mitigation-plan-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Close the dropdown
     setIsOpen(false);
   };
 
@@ -69,17 +133,9 @@ const UserProfile: React.FC = () => {
         className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center space-x-3">
-          {user.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <User className="text-primary-600" size={16} />
-            </div>
-          )}
+          <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+            <User className="text-primary-600" size={16} />
+          </div>
           <div className="hidden sm:block text-left">
             <p className="text-sm font-medium text-gray-900">{user.name}</p>
             <p className="text-xs text-gray-500 capitalize">{user.role}</p>
@@ -96,17 +152,9 @@ const UserProfile: React.FC = () => {
           {/* User Info Header */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-start space-x-3">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="text-primary-600" size={20} />
-                </div>
-              )}
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                <User className="text-primary-600" size={20} />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{user.name}</p>
                 <p className="text-sm text-gray-500 truncate">{user.email}</p>
@@ -133,6 +181,15 @@ const UserProfile: React.FC = () => {
             <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
               <Settings size={16} />
               <span>Account Settings</span>
+            </button>
+
+            <button 
+              onClick={downloadMitigationPlan}
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <FileText size={16} />
+              <span>Mitigation Plan</span>
+              <Download size={14} className="ml-auto text-gray-400" />
             </button>
             
             <button className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">

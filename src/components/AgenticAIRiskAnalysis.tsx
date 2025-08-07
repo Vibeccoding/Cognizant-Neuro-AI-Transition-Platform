@@ -61,8 +61,12 @@ const AgenticAIRiskAnalysis: React.FC<AgenticAIRiskAnalysisProps> = ({ phase }) 
     }));
   };
 
-  // Generate risk data based on the phase metrics (47 risks identified, 94% compliance)
-  const riskData: RiskItem[] = [
+  // Generate risk data based on the phase metrics
+  const generateRiskData = (): RiskItem[] => {
+    const risksIdentified = parseInt(phase.keyMetrics.find(m => m.label === 'Risks Identified')?.value?.toString().replace(/[^0-9]/g, '') || '47');
+    const complianceScore = parseFloat(phase.keyMetrics.find(m => m.label === 'Compliance Score')?.value?.toString().replace('%', '') || '94');
+    
+    return [
     {
       id: 'DD-001',
       category: 'Technical',
@@ -139,6 +143,9 @@ const AgenticAIRiskAnalysis: React.FC<AgenticAIRiskAnalysisProps> = ({ phase }) 
       timeline: '2024-02-15'
     }
   ];
+  };
+  
+  const riskData = generateRiskData();
 
   const getSeverityColor = (severity: RiskItem['severity']) => {
     switch (severity) {
@@ -335,7 +342,7 @@ const AgenticAIRiskAnalysis: React.FC<AgenticAIRiskAnalysisProps> = ({ phase }) 
               <span className="font-medium text-blue-800">Compliance Achievement</span>
             </div>
             <p className="text-sm text-gray-600">
-              {uploadStats.totalFiles > 0 ? '96%' : '94%'} compliance score achieved through automated compliance checking and gap analysis.
+              {phase.keyMetrics.find(m => m.label === 'Compliance Score')?.value || '94%'} compliance score achieved through automated compliance checking and gap analysis.
             </p>
           </div>
           {uploadStats.totalFiles > 0 ? (

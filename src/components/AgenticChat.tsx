@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Send, Bot, User, X, Minimize2, Maximize2 } from 'lucide-react';
 import { ChatMessage } from '../types';
+import { mockFramework } from '../data/mockData';
 
 interface AgenticChatProps {
   phaseContext?: string;
@@ -55,11 +56,19 @@ const AgenticChat: React.FC<AgenticChatProps> = ({ phaseContext, className = '' 
   const generateAIResponse = (message: string, context?: string): string => {
     const lowerMessage = message.toLowerCase();
     
+    // Get phase data from mockFramework
+    const dashboardPhase = mockFramework.phases.find(p => p.id === 'dashboard');
+    const dueDiligencePhase = mockFramework.phases.find(p => p.id === 'due-diligence');
+    const knowledgePhase = mockFramework.phases.find(p => p.id === 'knowledge-acquisition');
+    
     if (context) {
       switch (context) {
-        case 'Dashboard Management':
+        case 'AI Transition Dashboard':
           if (lowerMessage.includes('metric') || lowerMessage.includes('kpi')) {
-            return 'For Dashboard Management, key metrics include system uptime (currently 99.8%), data processing speed (2.3s), and user satisfaction (4.7/5). I can help you analyze trends and set up automated alerts for any metric thresholds.';
+            const uptime = dashboardPhase?.keyMetrics.find(m => m.label === 'System Uptime')?.value || '99.8%';
+            const speed = dashboardPhase?.keyMetrics.find(m => m.label === 'Data Processing Speed')?.value || '2.3s';
+            const satisfaction = dashboardPhase?.keyMetrics.find(m => m.label === 'User Satisfaction')?.value || '4.7/5';
+            return `For Dashboard Management, key metrics include system uptime (currently ${uptime}), data processing speed (${speed}), and user satisfaction (${satisfaction}). I can help you analyze trends and set up automated alerts for any metric thresholds.`;
           }
           if (lowerMessage.includes('ai') || lowerMessage.includes('implementation')) {
             return 'AI implementations in this phase include predictive analytics for resource allocation, automated alert systems, real-time performance monitoring, and intelligent data visualization. Would you like me to explain any specific implementation?';
@@ -67,21 +76,30 @@ const AgenticChat: React.FC<AgenticChatProps> = ({ phaseContext, className = '' 
           break;
         case 'Due Diligence':
           if (lowerMessage.includes('risk') || lowerMessage.includes('compliance')) {
-            return 'Our AI-powered due diligence has identified 47 risks with a 94% compliance score. The automated document analysis has processed 12,450 documents. I can provide detailed risk breakdowns or compliance gap analysis.';
+            const risksIdentified = dueDiligencePhase?.keyMetrics.find(m => m.label === 'Risks Identified')?.value || '47';
+            const complianceScore = dueDiligencePhase?.keyMetrics.find(m => m.label === 'Compliance Score')?.value || '94%';
+            const documentsAnalyzed = dueDiligencePhase?.keyMetrics.find(m => m.label === 'Documents Analyzed')?.value || '12,450';
+            return `Our AI-powered due diligence has identified ${risksIdentified} risks with a ${complianceScore} compliance score. The automated document analysis has processed ${documentsAnalyzed} documents. I can provide detailed risk breakdowns or compliance gap analysis.`;
           }
           break;
-        case 'Knowledge Dashboard':
+        case 'Knowledge Acquisition':
           if (lowerMessage.includes('knowledge') || lowerMessage.includes('documentation')) {
-            return 'We\'ve extracted 8,920 knowledge items with 92% accuracy. The AI uses NLP for documentation, generates knowledge graphs, and creates automated training materials. Need help with specific knowledge areas?';
+            const knowledgeItems = knowledgePhase?.keyMetrics.find(m => m.label === 'Knowledge Items')?.value || '8,920';
+            const accuracyRate = knowledgePhase?.keyMetrics.find(m => m.label === 'Accuracy Rate')?.value || '92%';
+            return `We've extracted ${knowledgeItems} knowledge items with ${accuracyRate} accuracy. The AI uses NLP for documentation, generates knowledge graphs, and creates automated training materials. Need help with specific knowledge areas?`;
           }
           break;
         // Add more context-specific responses for other phases
       }
     }
 
-    // General responses
+    // General responses using dynamic data
     if (lowerMessage.includes('progress') || lowerMessage.includes('status')) {
-      return 'The overall Cognizant Neuro AI Transition Platform is 65% complete. Dashboard Management (75%), Due Diligence (100%), and Knowledge Dashboard (60%) are the most advanced phases. Would you like details on any specific phase?';
+      const dashboardProgress = dashboardPhase?.progress || 75;
+      const dueDiligenceProgress = dueDiligencePhase?.progress || 100;
+      const knowledgeProgress = knowledgePhase?.progress || 60;
+      const overallProgress = mockFramework.overallProgress;
+      return `The overall Cognizant Neuro AI Transition Platform is ${overallProgress}% complete. AI Transition Dashboard (${dashboardProgress}%), Due Diligence (${dueDiligenceProgress}%), and Knowledge Acquisition (${knowledgeProgress}%) are the most advanced phases. Would you like details on any specific phase?`;
     }
     
     if (lowerMessage.includes('ai') || lowerMessage.includes('artificial intelligence')) {
